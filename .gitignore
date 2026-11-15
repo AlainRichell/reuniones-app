@@ -1,0 +1,45 @@
+# Java y Maven
+target/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# Node y Angular
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs y temporales
+*.log
+logs/
+*.tmp
+*.bak
+
+# Documentos internos del autor (no se entregan)
+IDEA.md
+docs/

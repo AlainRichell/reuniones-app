@@ -1,0 +1,22 @@
+name: reuniones-app
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: reuniones-db
+    environment:
+      POSTGRES_DB: ${DB_NOMBRE:-reuniones}
+      POSTGRES_USER: ${DB_USUARIO:-reuniones}
+      POSTGRES_PASSWORD: ${DB_CLAVE:-reuniones}
+    ports:
+      - "${DB_PUERTO:-5432}:5432"
+    volumes:
+      - datos-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USUARIO:-reuniones} -d ${DB_NOMBRE:-reuniones}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  datos-db:
