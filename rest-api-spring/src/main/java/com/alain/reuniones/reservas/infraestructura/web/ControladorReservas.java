@@ -32,6 +32,9 @@ import com.alain.reuniones.reservas.infraestructura.web.dto.CrearReservaSolicitu
 import com.alain.reuniones.reservas.infraestructura.web.dto.ReservaRespuesta;
 import com.alain.reuniones.salas.aplicacion.api.BuscadorSalas;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -60,6 +63,9 @@ public class ControladorReservas {
 		this.buscadorSalas = buscadorSalas;
 	}
 
+	@Operation(summary = "Crea una reserva", description = "Devuelve 409 si la sala ya está ocupada en ese horario. Requiere token JWT")
+	@SecurityRequirement(name = "bearer-jwt")
+	@ApiResponse(responseCode = "409", description = "La sala no está disponible en el horario solicitado")
 	@PostMapping
 	public ResponseEntity<ReservaRespuesta> crear(@Valid @RequestBody CrearReservaSolicitud solicitud) {
 		Reserva reserva = crearReserva.crear(solicitud.salaId(), solicitud.nombreResponsable(),
@@ -72,6 +78,8 @@ public class ControladorReservas {
 		return ResponseEntity.created(ubicacion).body(ReservaRespuesta.de(reserva, nombreSala));
 	}
 
+	@Operation(summary = "Lista reservas con filtros",
+			description = "El filtro por fecha cubre el día completo en la zona horaria configurada")
 	@GetMapping
 	public RespuestaPagina<ReservaRespuesta> listar(@RequestParam(required = false) UUID salaId,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
@@ -86,12 +94,16 @@ public class ControladorReservas {
 				reserva -> ReservaRespuesta.de(reserva, nombres.get(reserva.salaId().valor())));
 	}
 
+	@Operation(summary = "Obtiene una reserva por su identificador")
 	@GetMapping("/{id}")
 	public ReservaRespuesta obtener(@PathVariable UUID id) {
 		Reserva reserva = obtenerReserva.obtener(id);
 		return ReservaRespuesta.de(reserva, buscadorSalas.buscar(reserva.salaId()).nombre());
 	}
 
+	@Operation(summary = "Cancela una reserva", description = "Requiere token JWT")
+	@SecurityRequirement(name = "bearer-jwt")
+	@ApiResponse(responseCode = "409", description = "La reserva ya estaba cancelada")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> cancelar(@PathVariable UUID id) {
 		cancelarReserva.cancelar(id);

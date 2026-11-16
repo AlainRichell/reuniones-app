@@ -23,6 +23,9 @@ import com.alain.reuniones.salas.dominio.Sala;
 import com.alain.reuniones.salas.infraestructura.web.dto.CrearSalaSolicitud;
 import com.alain.reuniones.salas.infraestructura.web.dto.SalaRespuesta;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -44,6 +47,9 @@ public class ControladorSalas {
 		this.obtenerSala = obtenerSala;
 	}
 
+	@Operation(summary = "Crea una sala", description = "Requiere token JWT")
+	@SecurityRequirement(name = "bearer-jwt")
+	@ApiResponse(responseCode = "409", description = "Ya existe una sala con ese nombre")
 	@PostMapping
 	public ResponseEntity<SalaRespuesta> crear(@Valid @RequestBody CrearSalaSolicitud solicitud) {
 		Sala sala = crearSala.crear(solicitud.nombre(), solicitud.capacidad(), solicitud.ubicacion());
@@ -54,6 +60,7 @@ public class ControladorSalas {
 		return ResponseEntity.created(ubicacion).body(SalaRespuesta.de(sala));
 	}
 
+	@Operation(summary = "Lista las salas con paginación")
 	@GetMapping
 	public RespuestaPagina<SalaRespuesta> listar(
 			@RequestParam(defaultValue = "0") @Min(value = 0, message = "no puede ser negativo") int pagina,
@@ -61,6 +68,7 @@ public class ControladorSalas {
 		return RespuestaPagina.de(listarSalas.listar(pagina, tamano), SalaRespuesta::de);
 	}
 
+	@Operation(summary = "Obtiene una sala por su identificador")
 	@GetMapping("/{id}")
 	public SalaRespuesta obtener(@PathVariable UUID id) {
 		return SalaRespuesta.de(obtenerSala.obtener(new IdSala(id)));

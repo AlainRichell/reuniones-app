@@ -10,6 +10,7 @@ import com.alain.reuniones.seguridad.aplicacion.EmisorToken;
 import com.alain.reuniones.seguridad.infraestructura.web.dto.RespuestaToken;
 import com.alain.reuniones.seguridad.infraestructura.web.dto.SolicitudInicioSesion;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
 @RestController
@@ -25,6 +26,7 @@ public class ControladorAutenticacion {
 		this.emisorToken = emisorToken;
 	}
 
+	@Operation(summary = "Inicia sesión y devuelve un token JWT")
 	@PostMapping
 	public RespuestaToken iniciar(@Valid @RequestBody SolicitudInicioSesion solicitud) {
 		AutenticarUsuario.UsuarioAutenticado usuario = autenticarUsuario.autenticar(solicitud.usuario(),
