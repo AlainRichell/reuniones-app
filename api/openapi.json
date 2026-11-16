@@ -1,0 +1,583 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "API de Reserva de Salas",
+        "description": "API REST para crear salas y reservarlas por franjas horarias.\nLas lecturas son p\u00fablicas; las escrituras requieren un token JWT\nobtenido en POST /api/v1/sesiones.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Local"
+        },
+        {
+            "url": "http://localhost:8081",
+            "description": "Docker"
+        }
+    ],
+    "paths": {
+        "/api/v1/sesiones": {
+            "post": {
+                "tags": [
+                    "controlador-autenticacion"
+                ],
+                "summary": "Inicia sesi\u00f3n y devuelve un token JWT",
+                "operationId": "iniciar",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SolicitudInicioSesion"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RespuestaToken"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/salas": {
+            "get": {
+                "tags": [
+                    "controlador-salas"
+                ],
+                "summary": "Lista las salas con paginaci\u00f3n",
+                "operationId": "listar",
+                "parameters": [
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "tamano",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RespuestaPaginaSalaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "controlador-salas"
+                ],
+                "summary": "Crea una sala",
+                "description": "Requiere token JWT",
+                "operationId": "crear",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CrearSalaSolicitud"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "409": {
+                        "description": "Ya existe una sala con ese nombre",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SalaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer-jwt": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reservas": {
+            "get": {
+                "tags": [
+                    "controlador-reservas"
+                ],
+                "summary": "Lista reservas con filtros",
+                "description": "El filtro por fecha cubre el d\u00eda completo en la zona horaria configurada",
+                "operationId": "listar_1",
+                "parameters": [
+                    {
+                        "name": "salaId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "fecha",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ACTIVA",
+                                "CANCELADA"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "orden",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "INICIO",
+                            "enum": [
+                                "INICIO",
+                                "CREADA_EN"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "tamano",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RespuestaPaginaReservaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "controlador-reservas"
+                ],
+                "summary": "Crea una reserva",
+                "description": "Devuelve 409 si la sala ya est\u00e1 ocupada en ese horario. Requiere token JWT",
+                "operationId": "crear_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CrearReservaSolicitud"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "409": {
+                        "description": "La sala no est\u00e1 disponible en el horario solicitado",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ReservaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer-jwt": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/salas/{id}": {
+            "get": {
+                "tags": [
+                    "controlador-salas"
+                ],
+                "summary": "Obtiene una sala por su identificador",
+                "operationId": "obtener",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SalaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reservas/{id}": {
+            "get": {
+                "tags": [
+                    "controlador-reservas"
+                ],
+                "summary": "Obtiene una reserva por su identificador",
+                "operationId": "obtener_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ReservaRespuesta"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "controlador-reservas"
+                ],
+                "summary": "Cancela una reserva",
+                "description": "Requiere token JWT",
+                "operationId": "cancelar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "409": {
+                        "description": "La reserva ya estaba cancelada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer-jwt": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "SolicitudInicioSesion": {
+                "type": "object",
+                "properties": {
+                    "usuario": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "clave": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "clave",
+                    "usuario"
+                ]
+            },
+            "RespuestaToken": {
+                "type": "object",
+                "properties": {
+                    "tokenAcceso": {
+                        "type": "string"
+                    },
+                    "tipoToken": {
+                        "type": "string"
+                    },
+                    "expiraEn": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "CrearSalaSolicitud": {
+                "type": "object",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "maxLength": 80,
+                        "minLength": 3
+                    },
+                    "capacidad": {
+                        "type": "integer",
+                        "format": "int32",
+                        "maximum": 100,
+                        "minimum": 1
+                    },
+                    "ubicacion": {
+                        "type": "string",
+                        "maxLength": 120,
+                        "minLength": 0
+                    }
+                },
+                "required": [
+                    "nombre"
+                ]
+            },
+            "SalaRespuesta": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    },
+                    "capacidad": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ubicacion": {
+                        "type": "string"
+                    },
+                    "creadaEn": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "CrearReservaSolicitud": {
+                "type": "object",
+                "properties": {
+                    "salaId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nombreResponsable": {
+                        "type": "string",
+                        "maxLength": 120,
+                        "minLength": 2
+                    },
+                    "correoResponsable": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 180,
+                        "minLength": 0
+                    },
+                    "inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "correoResponsable",
+                    "fin",
+                    "inicio",
+                    "nombreResponsable",
+                    "salaId"
+                ]
+            },
+            "ReservaRespuesta": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "sala": {
+                        "$ref": "#/components/schemas/SalaResumen"
+                    },
+                    "nombreResponsable": {
+                        "type": "string"
+                    },
+                    "correoResponsable": {
+                        "type": "string"
+                    },
+                    "inicio": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fin": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "estado": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVA",
+                            "CANCELADA"
+                        ]
+                    },
+                    "canceladaEn": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "creadaEn": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "SalaResumen": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "nombre": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RespuestaPaginaSalaRespuesta": {
+                "type": "object",
+                "properties": {
+                    "contenido": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SalaRespuesta"
+                        }
+                    },
+                    "pagina": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tamano": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElementos": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPaginas": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "RespuestaPaginaReservaRespuesta": {
+                "type": "object",
+                "properties": {
+                    "contenido": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReservaRespuesta"
+                        }
+                    },
+                    "pagina": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tamano": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElementos": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPaginas": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "bearer-jwt": {
+                "type": "http",
+                "description": "Token obtenido en POST /api/v1/sesiones",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}
