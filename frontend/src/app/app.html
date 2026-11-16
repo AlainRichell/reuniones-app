@@ -1,0 +1,18 @@
+<header class="cabecera">
+  <a class="marca" routerLink="/salas">Salas de reunión</a>
+  <nav class="navegacion">
+    @if (sesion.autenticado()) {
+      <a routerLink="/salas" routerLinkActive="activo">Salas</a>
+      <a routerLink="/reservas" routerLinkActive="activo">Reservas</a>
+      <button type="button" class="enlace" (click)="cerrarSesion()">Salir</button>
+    } @else {
+      <a routerLink="/inicio-sesion" routerLinkActive="activo">Iniciar sesión</a>
+    }
+  </nav>
+</header>
+
+<main class="contenido">
+  <router-outlet />
+</main>
+
+<p-toast position="top-right" />

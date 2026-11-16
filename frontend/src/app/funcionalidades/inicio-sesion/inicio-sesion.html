@@ -1,0 +1,38 @@
+<section class="pagina login">
+  <div class="tarjeta">
+    <h1>Iniciar sesión</h1>
+    <p>Entra con el usuario administrador para crear salas y reservas.</p>
+
+    <form (ngSubmit)="iniciar()">
+      <div class="campo">
+        <label for="usuario">Usuario</label>
+        <input pInputText id="usuario" name="usuario" [(ngModel)]="usuario" autocomplete="username" required />
+      </div>
+
+      <div class="campo">
+        <label for="clave">Clave</label>
+        <input
+          pInputText
+          id="clave"
+          name="clave"
+          type="password"
+          [(ngModel)]="clave"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <p-button
+        type="submit"
+        label="Entrar"
+        icon="pi pi-sign-in"
+        [loading]="cargando()"
+        [disabled]="!usuario || !clave"
+      />
+    </form>
+  </div>
+</section>

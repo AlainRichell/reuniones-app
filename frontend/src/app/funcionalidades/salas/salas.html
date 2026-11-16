@@ -1,0 +1,82 @@
+<section class="pagina">
+  <div class="encabezado">
+    <div>
+      <h1>Salas</h1>
+      <p>Consulta el catálogo y crea salas nuevas.</p>
+    </div>
+    <p-button label="Nueva sala" icon="pi pi-plus" (onClick)="abrirDialogo()" />
+  </div>
+
+  <div class="tarjeta">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Capacidad</th>
+          <th>Ubicación</th>
+          <th>Creada</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (sala of salas(); track sala.id) {
+          <tr>
+            <td>{{ sala.nombre }}</td>
+            <td>{{ sala.capacidad }}</td>
+            <td>{{ sala.ubicacion || '—' }}</td>
+            <td>{{ sala.creadaEn | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="vacio">
+              {{ cargando() ? 'Cargando salas…' : 'Todavía no hay salas.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p-paginator
+      [first]="pagina * tamano"
+      [rows]="tamano"
+      [totalRecords]="total()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      (onPageChange)="cambiarPagina($event)"
+    />
+  </div>
+
+  <p-dialog header="Nueva sala" [(visible)]="dialogoVisible" [modal]="true" [style]="{ width: '420px' }">
+    <div class="pagina">
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input pInputText id="nombre" [(ngModel)]="nueva.nombre" maxlength="80" />
+      </div>
+
+      <div class="campo">
+        <label for="capacidad">Capacidad</label>
+        <p-inputnumber
+          inputId="capacidad"
+          [(ngModel)]="nueva.capacidad"
+          [min]="1"
+          [max]="100"
+          [showButtons]="true"
+        />
+      </div>
+
+      <div class="campo">
+        <label for="ubicacion">Ubicación (opcional)</label>
+        <input pInputText id="ubicacion" [(ngModel)]="nueva.ubicacion" maxlength="120" />
+      </div>
+
+      <div class="acciones-dialogo">
+        <p-button label="Cancelar" severity="secondary" (onClick)="dialogoVisible = false" />
+        <p-button
+          label="Crear"
+          icon="pi pi-check"
+          [loading]="guardando()"
+          [disabled]="!nueva.nombre"
+          (onClick)="crear()"
+        />
+      </div>
+    </div>
+  </p-dialog>
+</section>

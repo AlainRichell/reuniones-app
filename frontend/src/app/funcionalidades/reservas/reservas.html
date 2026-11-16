@@ -1,0 +1,165 @@
+<section class="pagina">
+  <div class="encabezado">
+    <div>
+      <h1>Reservas</h1>
+      <p>Filtra por sala o día y gestiona las reservas.</p>
+    </div>
+    <p-button label="Nueva reserva" icon="pi pi-calendar-plus" (onClick)="abrirDialogo()" />
+  </div>
+
+  <div class="tarjeta filtros">
+    <div class="campo">
+      <label for="filtroSala">Sala</label>
+      <p-select
+        inputId="filtroSala"
+        [options]="salas()"
+        optionLabel="nombre"
+        optionValue="id"
+        [(ngModel)]="filtroSala"
+        placeholder="Todas"
+        [showClear]="true"
+      />
+    </div>
+
+    <div class="campo">
+      <label for="filtroFecha">Día</label>
+      <p-datepicker
+        inputId="filtroFecha"
+        [(ngModel)]="filtroFecha"
+        dateFormat="dd/mm/yy"
+        [showTime]="false"
+        [showClear]="true"
+        appendTo="body"
+      />
+    </div>
+
+    <div class="campo">
+      <label for="filtroEstado">Estado</label>
+      <p-select
+        inputId="filtroEstado"
+        [options]="estados"
+        optionLabel="etiqueta"
+        optionValue="valor"
+        [(ngModel)]="filtroEstado"
+        placeholder="Todos"
+        [showClear]="true"
+      />
+    </div>
+
+    <p-button label="Buscar" icon="pi pi-search" (onClick)="buscar()" />
+  </div>
+
+  <div class="tarjeta">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Sala</th>
+          <th>Responsable</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (reserva of reservas(); track reserva.id) {
+          <tr>
+            <td>{{ reserva.sala.nombre }}</td>
+            <td>
+              <div>{{ reserva.nombreResponsable }}</div>
+              <small>{{ reserva.correoResponsable }}</small>
+            </td>
+            <td>{{ reserva.inicio | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ reserva.fin | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <p-tag
+                [value]="reserva.estado"
+                [severity]="reserva.estado === 'ACTIVA' ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-button
+                label="Cancelar"
+                severity="danger"
+                [text]="true"
+                [disabled]="reserva.estado === 'CANCELADA'"
+                (onClick)="confirmarCancelacion(reserva)"
+              />
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="vacio">
+              {{ cargando() ? 'Cargando reservas…' : 'No hay reservas con esos filtros.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p-paginator
+      [first]="pagina * tamano"
+      [rows]="tamano"
+      [totalRecords]="total()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      (onPageChange)="cambiarPagina($event)"
+    />
+  </div>
+
+  <p-dialog header="Nueva reserva" [(visible)]="dialogoVisible" [modal]="true" [style]="{ width: '480px' }">
+    <div class="pagina">
+      <div class="campo">
+        <label for="salaReserva">Sala</label>
+        <p-select
+          inputId="salaReserva"
+          [options]="salas()"
+          optionLabel="nombre"
+          optionValue="id"
+          [(ngModel)]="nueva.salaId"
+          placeholder="Elige una sala"
+        />
+      </div>
+
+      <div class="campo">
+        <label for="responsable">Responsable</label>
+        <input pInputText id="responsable" [(ngModel)]="nueva.nombreResponsable" maxlength="120" />
+      </div>
+
+      <div class="campo">
+        <label for="correo">Correo</label>
+        <input pInputText id="correo" type="email" [(ngModel)]="nueva.correoResponsable" maxlength="180" />
+      </div>
+
+      <div class="campo">
+        <label for="inicio">Inicio</label>
+        <p-datepicker
+          inputId="inicio"
+          [(ngModel)]="nueva.inicio"
+          dateFormat="dd/mm/yy"
+          [showTime]="true"
+          hourFormat="24"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="campo">
+        <label for="fin">Fin</label>
+        <p-datepicker
+          inputId="fin"
+          [(ngModel)]="nueva.fin"
+          dateFormat="dd/mm/yy"
+          [showTime]="true"
+          hourFormat="24"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="acciones-dialogo">
+        <p-button label="Cancelar" severity="secondary" (onClick)="dialogoVisible = false" />
+        <p-button label="Reservar" icon="pi pi-check" [loading]="guardando()" (onClick)="crear()" />
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-confirmdialog />
+</section>
