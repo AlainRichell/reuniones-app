@@ -1,5 +1,7 @@
 # API de Reserva de Salas
 
+## Qué es
+
 API REST para crear salas de reunión y reservarlas por franjas horarias, con detección de solapes garantizada también en la base de datos. Incluye frontend Angular, autenticación JWT, migraciones Flyway, documentación OpenAPI y un stack completo en Docker.
 
 **Stack**: Java 21 · Spring Boot 4.1.2 · PostgreSQL 17 · Flyway · JWT (resource server) · Testcontainers · Angular 22 · PrimeNG 22 · Docker Compose.
