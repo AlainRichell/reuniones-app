@@ -1,6 +1,9 @@
 package com.alain.reuniones.salas.infraestructura.persistencia;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -38,6 +41,12 @@ public class AdaptadorPersistenciaSalas implements RepositorioSalas {
 	@Override
 	public Optional<Sala> buscarPorId(IdSala id) {
 		return repositorio.findById(id.valor()).map(MapeadorSala::aDominio);
+	}
+
+	@Override
+	public List<Sala> buscarPorIds(Collection<IdSala> ids) {
+		List<UUID> valores = ids.stream().map(IdSala::valor).toList();
+		return repositorio.findAllById(valores).stream().map(MapeadorSala::aDominio).toList();
 	}
 
 	@Override
