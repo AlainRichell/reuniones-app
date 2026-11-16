@@ -18,5 +18,36 @@ services:
       timeout: 3s
       retries: 10
 
+  api:
+    build:
+      context: ./rest-api-spring
+    container_name: reuniones-api
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NOMBRE:-reuniones}
+      DB_USUARIO: ${DB_USUARIO:-reuniones}
+      DB_CLAVE: ${DB_CLAVE:-reuniones}
+      JWT_SECRETO: ${JWT_SECRETO:?define JWT_SECRETO en el archivo .env}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  web:
+    build:
+      context: ./frontend
+    container_name: reuniones-web
+    ports:
+      - "8081:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   datos-db:
