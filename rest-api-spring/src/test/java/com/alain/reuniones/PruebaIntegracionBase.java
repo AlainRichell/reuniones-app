@@ -11,21 +11,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import com.jayway.jsonpath.JsonPath;
 
 /** Un único contenedor de PostgreSQL para toda la JVM: el contexto de Spring se comparte entre clases. */
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@TestPropertySource(properties = "aplicacion.jwt.secreto=clave-de-pruebas-con-mas-de-32-caracteres")
 public abstract class PruebaIntegracionBase {
 
 	@ServiceConnection
-	static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17-alpine");
+	static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine");
 
 	static {
 		POSTGRES.start();
@@ -36,26 +39,48 @@ public abstract class PruebaIntegracionBase {
 
 	private RestClient cliente;
 
+	private String token;
+
 	@BeforeEach
 	void prepararCliente() {
 		cliente = RestClient.builder().baseUrl("http://localhost:" + puerto).build();
+		token = null;
 	}
 
 	protected UUID crearSala(String nombre) {
-		ResponseEntity<String> respuesta = enviar(HttpMethod.POST, "/api/v1/salas",
-				Map.of("nombre", nombre, "capacidad", 8));
+		ResponseEntity<String> respuesta = enviarConToken(HttpMethod.POST, "/api/v1/salas",
+				Map.of("nombre", nombre, "capacidad", 8), tokenAdmin());
 		assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		return UUID.fromString(texto(respuesta, "$.id"));
 	}
 
 	protected ResponseEntity<String> reservar(UUID salaId, String inicio, String fin) {
-		return enviar(HttpMethod.POST, "/api/v1/reservas",
+		return enviarConToken(HttpMethod.POST, "/api/v1/reservas",
 				Map.of("salaId", salaId.toString(), "nombreResponsable", "Ana Pérez", "correoResponsable",
-						"ana@example.com", "inicio", inicio, "fin", fin));
+						"ana@example.com", "inicio", inicio, "fin", fin),
+				tokenAdmin());
+	}
+
+	protected synchronized String tokenAdmin() {
+		if (token == null) {
+			ResponseEntity<String> inicioSesion = enviar(HttpMethod.POST, "/api/v1/sesiones",
+					Map.of("usuario", "admin", "clave", "admin123"));
+			assertThat(inicioSesion.getStatusCode()).isEqualTo(HttpStatus.OK);
+			token = texto(inicioSesion, "$.tokenAcceso");
+		}
+		return token;
 	}
 
 	protected ResponseEntity<String> enviar(HttpMethod metodo, String ruta, Object cuerpo) {
-		RestClient.RequestBodySpec peticion = cliente.method(metodo).uri(ruta);
+		return ejecutar(cliente.method(metodo).uri(ruta), cuerpo);
+	}
+
+	protected ResponseEntity<String> enviarConToken(HttpMethod metodo, String ruta, Object cuerpo, String token) {
+		return ejecutar(cliente.method(metodo).uri(ruta).header(HttpHeaders.AUTHORIZATION, "Bearer " + token),
+				cuerpo);
+	}
+
+	private ResponseEntity<String> ejecutar(RestClient.RequestBodySpec peticion, Object cuerpo) {
 		if (cuerpo != null) {
 			peticion.contentType(APPLICATION_JSON).body(cuerpo);
 		}

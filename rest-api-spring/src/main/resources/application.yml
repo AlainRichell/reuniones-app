@@ -35,3 +35,8 @@ springdoc:
 
 aplicacion:
   zona-horaria: ${ZONA_HORARIA:America/La_Paz}
+  cors:
+    origenes: ${CORS_ORIGENES:http://localhost:4200,http://localhost:8081}
+  jwt:
+    secreto: ${JWT_SECRETO:}
+    duracion: ${JWT_DURACION:PT1H}

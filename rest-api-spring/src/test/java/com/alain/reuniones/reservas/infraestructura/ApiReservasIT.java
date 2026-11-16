@@ -31,10 +31,12 @@ class ApiReservasIT extends PruebaIntegracionBase {
 		assertThat(numero(listado, "$.totalElementos")).isEqualTo(1);
 		assertThat(texto(listado, "$.contenido[0].sala.nombre")).startsWith("Aurora IT");
 
-		ResponseEntity<String> cancelada = enviar(HttpMethod.DELETE, "/api/v1/reservas/" + reservaId, null);
+		ResponseEntity<String> cancelada = enviarConToken(HttpMethod.DELETE, "/api/v1/reservas/" + reservaId, null,
+				tokenAdmin());
 		assertThat(cancelada.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-		ResponseEntity<String> segundaCancelacion = enviar(HttpMethod.DELETE, "/api/v1/reservas/" + reservaId, null);
+		ResponseEntity<String> segundaCancelacion = enviarConToken(HttpMethod.DELETE,
+				"/api/v1/reservas/" + reservaId, null, tokenAdmin());
 		assertThat(segundaCancelacion.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 		assertThat(texto(segundaCancelacion, "$.codigo")).isEqualTo("RESERVA_YA_CANCELADA");
 
