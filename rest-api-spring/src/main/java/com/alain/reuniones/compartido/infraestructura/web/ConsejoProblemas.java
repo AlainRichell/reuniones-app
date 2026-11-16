@@ -137,6 +137,10 @@ public class ConsejoProblemas {
 		return switch (codigo) {
 			case "SALA_NO_ENCONTRADA" -> "Sala no encontrada";
 			case "NOMBRE_SALA_OCUPADO" -> "El nombre de la sala ya está en uso";
+			case "RANGO_HORARIO_INVALIDO" -> "El rango horario no es válido";
+			case "SALA_NO_DISPONIBLE" -> "La sala no está disponible en el horario solicitado";
+			case "RESERVA_NO_ENCONTRADA" -> "Reserva no encontrada";
+			case "RESERVA_YA_CANCELADA" -> "La reserva ya estaba cancelada";
 			case "DATOS_INVALIDOS" -> "La petición no pasó la validación";
 			default -> "No se pudo completar la operación";
 		};
